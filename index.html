@@ -1,0 +1,56 @@
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Bildgenerator</title>
+<meta name="theme-color" content="#0f0f16" />
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="icon.svg" />
+<link rel="manifest" href="manifest.json" />
+<link rel="stylesheet" href="style.css" />
+
+<div class="app">
+  <header class="header">
+    <h1>Bildgenerator</h1>
+    <p class="subtitle">Beschreibe ein Bild &ndash; wir erstellen es für dich</p>
+  </header>
+
+  <main class="card">
+    <textarea
+      id="prompt"
+      placeholder="z. B. Ein Leuchtturm bei Sonnenuntergang, Wellen brechen an Felsen"
+      rows="3"
+      maxlength="500"
+    ></textarea>
+
+    <div class="chips" id="styleChips">
+      <button type="button" class="chip" data-style="">Kein Stil</button>
+      <button type="button" class="chip" data-style="photorealistic, highly detailed, 8k">Foto</button>
+      <button type="button" class="chip" data-style="anime style, vibrant colors">Anime</button>
+      <button type="button" class="chip" data-style="watercolor painting, soft brush strokes">Aquarell</button>
+      <button type="button" class="chip" data-style="oil painting, classical art style">Ölgemälde</button>
+      <button type="button" class="chip" data-style="3d render, octane render, cinematic lighting">3D-Render</button>
+      <button type="button" class="chip" data-style="pixel art, retro video game style">Pixel-Art</button>
+    </div>
+
+    <div class="actions">
+      <button type="button" id="generateBtn" class="btn btn-primary">Bild erstellen</button>
+      <button type="button" id="surpriseBtn" class="btn btn-ghost">Überrasch mich</button>
+    </div>
+
+    <div id="status" class="status" hidden></div>
+
+    <section id="result" class="result" hidden>
+      <div class="image-wrap">
+        <img id="resultImage" alt="Generiertes Bild" />
+      </div>
+      <div class="actions">
+        <button type="button" id="regenerateBtn" class="btn btn-ghost">Neue Variante</button>
+        <button type="button" id="downloadBtn" class="btn btn-ghost">Herunterladen</button>
+        <button type="button" id="shareBtn" class="btn btn-ghost" hidden>Teilen</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">Bilder werden über image.pollinations.ai erzeugt.</footer>
+</div>
+
+<script src="script.js"></script>
