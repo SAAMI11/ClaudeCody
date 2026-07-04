@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Bildgenerator</title>
+<title>Bild &amp; Video Generator</title>
 <meta name="theme-color" content="#0f0f16" />
 <link rel="icon" href="icon.svg" type="image/svg+xml" />
 <link rel="apple-touch-icon" href="icon.svg" />
@@ -63,6 +63,32 @@ body {
   margin: 6px 0 0;
   color: var(--text-dim);
   font-size: 0.92rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px;
+}
+
+.tab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  padding: 10px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: var(--accent);
+  color: #fff;
 }
 
 .card {
@@ -201,6 +227,25 @@ textarea:focus {
   display: block;
 }
 
+.video-wrap {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #000;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-wrap video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  background: #000;
+}
+
 .footer {
   text-align: center;
   color: var(--text-dim);
@@ -213,11 +258,16 @@ textarea:focus {
 
 <div class="app">
   <header class="header">
-    <h1>Bildgenerator</h1>
-    <p class="subtitle">Beschreibe ein Bild &ndash; wir erstellen es für dich</p>
+    <h1>Bild &amp; Video Generator</h1>
+    <p class="subtitle" id="subtitleText">Beschreibe ein Bild &ndash; wir erstellen es für dich</p>
   </header>
 
-  <main class="card">
+  <nav class="tabs" id="modeTabs">
+    <button type="button" class="tab active" data-mode="image">Bild</button>
+    <button type="button" class="tab" data-mode="video">Video</button>
+  </nav>
+
+  <main class="card" id="imageMode">
     <textarea
       id="prompt"
       placeholder="z. B. Ein Leuchtturm bei Sonnenuntergang, Wellen brechen an Felsen"
@@ -254,21 +304,49 @@ textarea:focus {
     </section>
   </main>
 
-  <footer class="footer">Bilder werden über image.pollinations.ai erzeugt.</footer>
+  <main class="card" id="videoMode" hidden>
+    <textarea
+      id="videoPrompt"
+      placeholder="z. B. Ein Astronaut erkundet einen fremden Dschungelplaneten"
+      rows="3"
+      maxlength="500"
+    ></textarea>
+
+    <div class="chips" id="videoStyleChips">
+      <button type="button" class="chip" data-style="">Kein Stil</button>
+      <button type="button" class="chip" data-style="photorealistic, highly detailed, 8k">Foto</button>
+      <button type="button" class="chip" data-style="anime style, vibrant colors">Anime</button>
+      <button type="button" class="chip" data-style="watercolor painting, soft brush strokes">Aquarell</button>
+      <button type="button" class="chip" data-style="oil painting, classical art style">Ölgemälde</button>
+      <button type="button" class="chip" data-style="3d render, octane render, cinematic lighting">3D-Render</button>
+      <button type="button" class="chip" data-style="pixel art, retro video game style">Pixel-Art</button>
+    </div>
+
+    <div class="actions">
+      <button type="button" id="generateVideoBtn" class="btn btn-primary">Video erstellen</button>
+      <button type="button" id="surpriseVideoBtn" class="btn btn-ghost">Überrasch mich</button>
+    </div>
+
+    <div id="videoStatus" class="status" hidden></div>
+
+    <section id="videoResult" class="result" hidden>
+      <div class="video-wrap">
+        <video id="resultVideo" controls playsinline loop></video>
+      </div>
+      <div class="actions">
+        <button type="button" id="regenerateVideoBtn" class="btn btn-ghost">Neue Variante</button>
+        <button type="button" id="downloadVideoBtn" class="btn btn-ghost">Herunterladen</button>
+        <button type="button" id="shareVideoBtn" class="btn btn-ghost" hidden>Teilen</button>
+      </div>
+    </section>
+  </main>
+
+  <canvas id="videoCanvas" width="1280" height="720" style="display: none"></canvas>
+
+  <footer class="footer">Bilder &amp; Videos werden über image.pollinations.ai erzeugt.</footer>
 </div>
 
 <script>
-const promptEl = document.getElementById("prompt");
-const styleChipsEl = document.getElementById("styleChips");
-const generateBtn = document.getElementById("generateBtn");
-const surpriseBtn = document.getElementById("surpriseBtn");
-const statusEl = document.getElementById("status");
-const resultEl = document.getElementById("result");
-const resultImage = document.getElementById("resultImage");
-const regenerateBtn = document.getElementById("regenerateBtn");
-const downloadBtn = document.getElementById("downloadBtn");
-const shareBtn = document.getElementById("shareBtn");
-
 const EXAMPLE_PROMPTS = [
   "Ein Leuchtturm bei Sonnenuntergang, Wellen brechen an Felsen",
   "Eine futuristische Stadt bei Nacht mit fliegenden Autos",
@@ -280,21 +358,95 @@ const EXAMPLE_PROMPTS = [
   "Ein Roboter gärtnert in einem Zukunftsgarten",
 ];
 
-let selectedStyle = "";
-let currentBasePrompt = "";
+const styleState = {};
 
-styleChipsEl.addEventListener("click", (e) => {
-  const chip = e.target.closest(".chip");
-  if (!chip) return;
-  styleChipsEl.querySelectorAll(".chip").forEach((c) => c.classList.remove("active"));
-  chip.classList.add("active");
-  selectedStyle = chip.dataset.style;
+document.querySelectorAll(".chips").forEach((container) => {
+  container.addEventListener("click", (e) => {
+    const chip = e.target.closest(".chip");
+    if (!chip) return;
+    container.querySelectorAll(".chip").forEach((c) => c.classList.remove("active"));
+    chip.classList.add("active");
+    styleState[container.id] = chip.dataset.style;
+  });
 });
+
+function buildFullPrompt(basePrompt, chipsId) {
+  const style = styleState[chipsId] || "";
+  return style ? `${basePrompt}, ${style}` : basePrompt;
+}
+
+function buildImageUrl(fullPrompt, width, height, seed) {
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(
+    fullPrompt
+  )}?width=${width}&height=${height}&seed=${seed}&nologo=true`;
+}
+
+function loadImage(url, crossOrigin) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    if (crossOrigin) img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Bild konnte nicht geladen werden"));
+    img.src = url;
+  });
+}
+
+async function downloadBlobUrl(url, filename) {
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(objectUrl);
+  } catch (err) {
+    window.open(url, "_blank");
+  }
+}
+
+/* ---------- Mode tabs ---------- */
+
+const modeTabs = document.getElementById("modeTabs");
+const imageMode = document.getElementById("imageMode");
+const videoMode = document.getElementById("videoMode");
+const subtitleText = document.getElementById("subtitleText");
+
+modeTabs.addEventListener("click", (e) => {
+  const tab = e.target.closest(".tab");
+  if (!tab) return;
+  modeTabs.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+  tab.classList.add("active");
+  const mode = tab.dataset.mode;
+  imageMode.hidden = mode !== "image";
+  videoMode.hidden = mode !== "video";
+  subtitleText.textContent =
+    mode === "image"
+      ? "Beschreibe ein Bild – wir erstellen es für dich"
+      : "Beschreibe eine Szene – wir machen ein kurzes Video daraus";
+});
+
+/* ---------- Image mode ---------- */
+
+const promptEl = document.getElementById("prompt");
+const generateBtn = document.getElementById("generateBtn");
+const surpriseBtn = document.getElementById("surpriseBtn");
+const statusEl = document.getElementById("status");
+const resultEl = document.getElementById("result");
+const resultImage = document.getElementById("resultImage");
+const regenerateBtn = document.getElementById("regenerateBtn");
+const downloadBtn = document.getElementById("downloadBtn");
+const shareBtn = document.getElementById("shareBtn");
+
+let currentBasePrompt = "";
 
 generateBtn.addEventListener("click", () => {
   const text = promptEl.value.trim();
   if (!text) {
-    showStatus("Bitte gib zuerst eine Beschreibung ein.", true);
+    showStatus(statusEl, "Bitte gib zuerst eine Beschreibung ein.", true);
     return;
   }
   generateImage(text);
@@ -311,7 +463,7 @@ regenerateBtn.addEventListener("click", () => {
 });
 
 downloadBtn.addEventListener("click", () => {
-  downloadImage(resultImage.src);
+  downloadBlobUrl(resultImage.src, "bild.jpg");
 });
 
 if (navigator.share) {
@@ -332,62 +484,236 @@ if (navigator.share) {
   });
 }
 
-function buildFullPrompt(basePrompt) {
-  return selectedStyle ? `${basePrompt}, ${selectedStyle}` : basePrompt;
+function showStatus(el, text, isError = false) {
+  el.hidden = false;
+  el.classList.toggle("error", isError);
+  el.innerHTML = isError ? "" : '<span class="spinner"></span>';
+  el.append(text);
 }
 
-function showStatus(text, isError = false) {
-  statusEl.hidden = false;
-  statusEl.classList.toggle("error", isError);
-  statusEl.innerHTML = isError ? "" : '<span class="spinner"></span>';
-  statusEl.append(text);
-}
-
-function hideStatus() {
-  statusEl.hidden = true;
+function hideStatus(el) {
+  el.hidden = true;
 }
 
 function generateImage(basePrompt) {
   currentBasePrompt = basePrompt;
-  const fullPrompt = buildFullPrompt(basePrompt);
+  const fullPrompt = buildFullPrompt(basePrompt, "styleChips");
   const seed = Math.floor(Math.random() * 1_000_000);
-  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(
-    fullPrompt
-  )}?width=1024&height=1024&seed=${seed}&nologo=true`;
+  const url = buildImageUrl(fullPrompt, 1024, 1024, seed);
 
   generateBtn.disabled = true;
   resultEl.hidden = true;
-  showStatus("Bild wird erstellt...");
+  showStatus(statusEl, "Bild wird erstellt...");
 
   const img = new Image();
   img.onload = () => {
     resultImage.src = url;
     resultEl.hidden = false;
-    hideStatus();
+    hideStatus(statusEl);
     generateBtn.disabled = false;
     resultEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
   };
   img.onerror = () => {
-    showStatus("Bild konnte nicht erstellt werden. Bitte versuch es erneut.", true);
+    showStatus(statusEl, "Bild konnte nicht erstellt werden. Bitte versuch es erneut.", true);
     generateBtn.disabled = false;
   };
   img.src = url;
 }
 
-async function downloadImage(url) {
+/* ---------- Video mode ---------- */
+
+const videoPromptEl = document.getElementById("videoPrompt");
+const generateVideoBtn = document.getElementById("generateVideoBtn");
+const surpriseVideoBtn = document.getElementById("surpriseVideoBtn");
+const videoStatusEl = document.getElementById("videoStatus");
+const videoResultEl = document.getElementById("videoResult");
+const resultVideo = document.getElementById("resultVideo");
+const regenerateVideoBtn = document.getElementById("regenerateVideoBtn");
+const downloadVideoBtn = document.getElementById("downloadVideoBtn");
+const shareVideoBtn = document.getElementById("shareVideoBtn");
+const videoCanvas = document.getElementById("videoCanvas");
+
+const SCENE_HINTS = [
+  "wide establishing shot, cinematic",
+  "close-up detail shot, cinematic",
+  "dynamic low angle shot, cinematic",
+  "dramatic wide shot, golden hour lighting, cinematic",
+];
+const PAN_DIRECTIONS = [
+  { x: -1, y: -1 },
+  { x: 1, y: -1 },
+  { x: -1, y: 1 },
+  { x: 1, y: 1 },
+];
+const SCENE_DURATION = 2800; // ms per scene, excluding transition
+const TRANSITION_DURATION = 700; // ms crossfade into next scene
+const VIDEO_WIDTH = videoCanvas.width;
+const VIDEO_HEIGHT = videoCanvas.height;
+
+let currentVideoBasePrompt = "";
+let currentVideoObjectUrl = null;
+let isGeneratingVideo = false;
+
+generateVideoBtn.addEventListener("click", () => {
+  const text = videoPromptEl.value.trim();
+  if (!text) {
+    showStatus(videoStatusEl, "Bitte gib zuerst eine Szene ein.", true);
+    return;
+  }
+  generateVideo(text);
+});
+
+surpriseVideoBtn.addEventListener("click", () => {
+  const random = EXAMPLE_PROMPTS[Math.floor(Math.random() * EXAMPLE_PROMPTS.length)];
+  videoPromptEl.value = random;
+  generateVideo(random);
+});
+
+regenerateVideoBtn.addEventListener("click", () => {
+  if (currentVideoBasePrompt) generateVideo(currentVideoBasePrompt);
+});
+
+downloadVideoBtn.addEventListener("click", () => {
+  if (!currentVideoObjectUrl) return;
+  const a = document.createElement("a");
+  a.href = currentVideoObjectUrl;
+  a.download = "video.webm";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+});
+
+if (navigator.share) {
+  shareVideoBtn.hidden = false;
+  shareVideoBtn.addEventListener("click", async () => {
+    if (!currentVideoObjectUrl) return;
+    try {
+      const res = await fetch(currentVideoObjectUrl);
+      const blob = await res.blob();
+      const file = new File([blob], "video.webm", { type: blob.type || "video/webm" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: "Mein generiertes Video" });
+      }
+    } catch (err) {
+      // user cancelled or share failed silently
+    }
+  });
+}
+
+function pickMimeType() {
+  const candidates = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
+  return candidates.find((type) => window.MediaRecorder && MediaRecorder.isTypeSupported(type)) || null;
+}
+
+function drawKenBurnsFrame(ctx, img, t, dir) {
+  const progress = Math.min(Math.max(t, 0), 1);
+  const scale = 1 + 0.15 * progress;
+  const destW = VIDEO_WIDTH * scale;
+  const destH = VIDEO_HEIGHT * scale;
+  const extraW = destW - VIDEO_WIDTH;
+  const extraH = destH - VIDEO_HEIGHT;
+  const destX = -extraW / 2 + dir.x * (extraW / 2) * progress;
+  const destY = -extraH / 2 + dir.y * (extraH / 2) * progress;
+  ctx.drawImage(img, destX, destY, destW, destH);
+}
+
+function playScene(ctx, frames, index) {
+  return new Promise((resolve) => {
+    const total = SCENE_DURATION + (index < frames.length - 1 ? TRANSITION_DURATION : 0);
+    const start = performance.now();
+
+    function tick(now) {
+      const elapsed = now - start;
+      const baseProgress = Math.min(elapsed / SCENE_DURATION, 1);
+
+      ctx.clearRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
+      ctx.globalAlpha = 1;
+      drawKenBurnsFrame(ctx, frames[index].img, baseProgress, frames[index].dir);
+
+      if (elapsed > SCENE_DURATION && index < frames.length - 1) {
+        const transitionProgress = Math.min((elapsed - SCENE_DURATION) / TRANSITION_DURATION, 1);
+        ctx.globalAlpha = transitionProgress;
+        drawKenBurnsFrame(ctx, frames[index + 1].img, 0, frames[index + 1].dir);
+        ctx.globalAlpha = 1;
+      }
+
+      if (elapsed < total) {
+        requestAnimationFrame(tick);
+      } else {
+        resolve();
+      }
+    }
+
+    requestAnimationFrame(tick);
+  });
+}
+
+async function generateVideo(basePrompt) {
+  if (isGeneratingVideo) return;
+
+  const mimeType = pickMimeType();
+  if (!mimeType) {
+    showStatus(videoStatusEl, "Videoaufnahme wird von diesem Browser nicht unterstützt.", true);
+    return;
+  }
+
+  isGeneratingVideo = true;
+  currentVideoBasePrompt = basePrompt;
+  generateVideoBtn.disabled = true;
+  regenerateVideoBtn.disabled = true;
+  videoResultEl.hidden = true;
+
   try {
-    const res = await fetch(url);
-    const blob = await res.blob();
-    const objectUrl = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = objectUrl;
-    a.download = "bild.jpg";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(objectUrl);
+    const frames = [];
+    for (let i = 0; i < SCENE_HINTS.length; i++) {
+      showStatus(videoStatusEl, `Szene ${i + 1}/${SCENE_HINTS.length} wird erstellt...`);
+      const fullPrompt = buildFullPrompt(`${basePrompt}, ${SCENE_HINTS[i]}`, "videoStyleChips");
+      const seed = Math.floor(Math.random() * 1_000_000);
+      const url = buildImageUrl(fullPrompt, VIDEO_WIDTH, VIDEO_HEIGHT, seed);
+      const img = await loadImage(url, true);
+      frames.push({ img, dir: PAN_DIRECTIONS[i % PAN_DIRECTIONS.length] });
+    }
+
+    showStatus(videoStatusEl, "Video wird gerendert...");
+
+    const ctx = videoCanvas.getContext("2d");
+    ctx.clearRect(0, 0, VIDEO_WIDTH, VIDEO_HEIGHT);
+    drawKenBurnsFrame(ctx, frames[0].img, 0, frames[0].dir);
+
+    const stream = videoCanvas.captureStream(30);
+    const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 4_000_000 });
+    const chunks = [];
+    recorder.ondataavailable = (e) => {
+      if (e.data.size) chunks.push(e.data);
+    };
+
+    const stopped = new Promise((resolve) => {
+      recorder.onstop = resolve;
+    });
+
+    recorder.start();
+
+    for (let i = 0; i < frames.length; i++) {
+      await playScene(ctx, frames, i);
+    }
+
+    recorder.stop();
+    await stopped;
+
+    const blob = new Blob(chunks, { type: mimeType });
+    if (currentVideoObjectUrl) URL.revokeObjectURL(currentVideoObjectUrl);
+    currentVideoObjectUrl = URL.createObjectURL(blob);
+    resultVideo.src = currentVideoObjectUrl;
+
+    videoResultEl.hidden = false;
+    hideStatus(videoStatusEl);
+    videoResultEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
   } catch (err) {
-    window.open(url, "_blank");
+    showStatus(videoStatusEl, "Video konnte nicht erstellt werden. Bitte versuch es erneut.", true);
+  } finally {
+    generateVideoBtn.disabled = false;
+    regenerateVideoBtn.disabled = false;
+    isGeneratingVideo = false;
   }
 }
 </script>

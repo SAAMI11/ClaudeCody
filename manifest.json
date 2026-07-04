@@ -1,6 +1,6 @@
 {
-  "name": "Bildgenerator",
-  "short_name": "Bildgenerator",
+  "name": "Bild & Video Generator",
+  "short_name": "Bild&Video",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f0f16",
