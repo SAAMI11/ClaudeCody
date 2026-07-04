@@ -1,0 +1,14 @@
+# Core pipeline — works fully offline, no API keys, no external ffmpeg binary.
+av>=11            # PyAV: bundles the ffmpeg libraries (H.264 + AAC encoding)
+numpy>=1.24
+Pillow>=10
+
+# Only needed for the ONLINE providers (run these on your own PC):
+#   --images pollinations   uses a free key-less text-to-image web service
+requests>=2.28
+#   --tts gtts              free Google Translate TTS (needs internet)
+# gTTS>=2.5
+# pydub>=0.25              # decodes the gTTS mp3 (needs ffmpeg on PATH)
+#
+# Optional local, offline neural voice (best quality, no cloud):
+#   piper  ->  https://github.com/rhasspy/piper  (download a .onnx voice model)
