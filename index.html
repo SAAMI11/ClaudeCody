@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Bildgenerator</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --card: #1a1d24;
+    --border: #2a2e37;
+    --text: #f2f3f5;
+    --muted: #9aa1ac;
+    --accent: #7c5cff;
+    --accent-2: #ff5c9c;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100%;
+  }
+  body {
+    display: flex;
+    justify-content: center;
+    padding: env(safe-area-inset-top, 16px) 16px calc(env(safe-area-inset-bottom, 16px) + 16px);
+  }
+  .app {
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-top: 12px;
+  }
+  h1 {
+    font-size: 1.4rem;
+    margin: 0;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .subtitle {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+  }
+  textarea {
+    width: 100%;
+    min-height: 72px;
+    resize: vertical;
+    background: #12141a;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 1rem;
+    font-family: inherit;
+  }
+  textarea:focus { outline: 2px solid var(--accent); }
+  .row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  select, button {
+    font-family: inherit;
+    font-size: 0.9rem;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    background: #12141a;
+    color: var(--text);
+  }
+  select { flex: 1; min-width: 120px; }
+  .chip-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    background: #12141a;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+  }
+  .chip.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  button.primary {
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 14px;
+    font-size: 1rem;
+    cursor: pointer;
+    width: 100%;
+  }
+  button.primary:disabled {
+    opacity: 0.6;
+  }
+  button.secondary {
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    flex: 1;
+  }
+  .result {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    min-height: 120px;
+    justify-content: center;
+  }
+  .result img {
+    width: 100%;
+    border-radius: 12px;
+    display: block;
+  }
+  .placeholder {
+    color: var(--muted);
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 24px 0;
+  }
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error { color: #ff6b6b; font-size: 0.85rem; }
+  .actions { display: flex; gap: 8px; }
+  a.download-link {
+    text-decoration: none;
+  }
+  .history {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .history img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+  }
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.75rem;
+    margin-top: 8px;
+  }
+  footer a { color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="app">
+  <div>
+    <h1>Bildgenerator</h1>
+    <p class="subtitle">Schreib einen Prompt, tippe auf Generieren.</p>
+  </div>
+
+  <div class="card">
+    <textarea id="prompt" placeholder="z.B. ein Astronaut reitet auf einem Einhorn, digital art"></textarea>
+
+    <div class="row" style="margin-top:10px;">
+      <select id="model">
+        <option value="flux">Flux (beste Qualität)</option>
+        <option value="turbo">Turbo (schnell)</option>
+        <option value="flux-realism">Flux Realism</option>
+        <option value="flux-anime">Flux Anime</option>
+        <option value="flux-3d">Flux 3D</option>
+      </select>
+    </div>
+
+    <div class="chip-group" style="margin-top:10px;" id="ratio-group">
+      <div class="chip active" data-w="1024" data-h="1024">Quadrat</div>
+      <div class="chip" data-w="1024" data-h="1536">Hochformat</div>
+      <div class="chip" data-w="1536" data-h="1024">Querformat</div>
+    </div>
+
+    <div style="margin-top:14px;">
+      <button class="primary" id="generate">Bild generieren</button>
+    </div>
+  </div>
+
+  <div class="card result" id="result">
+    <p class="placeholder" id="placeholder">Hier erscheint dein Bild.</p>
+  </div>
+
+  <div id="historyCard" class="card" style="display:none;">
+    <p class="subtitle" style="margin-bottom:8px;">Letzte Bilder</p>
+    <div class="history" id="history"></div>
+  </div>
+
+  <footer>Bilder werden kostenlos über <a href="https://pollinations.ai" target="_blank" rel="noopener">Pollinations.ai</a> erzeugt.</footer>
+</div>
+
+<script>
+  const promptEl = document.getElementById('prompt');
+  const modelEl = document.getElementById('model');
+  const generateBtn = document.getElementById('generate');
+  const resultEl = document.getElementById('result');
+  const historyCard = document.getElementById('historyCard');
+  const historyEl = document.getElementById('history');
+  const ratioGroup = document.getElementById('ratio-group');
+
+  let width = 1024, height = 1024;
+  const history = [];
+
+  ratioGroup.addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    [...ratioGroup.children].forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    width = Number(chip.dataset.w);
+    height = Number(chip.dataset.h);
+  });
+
+  function buildUrl(prompt, model, seed) {
+    const encoded = encodeURIComponent(prompt.trim());
+    const params = new URLSearchParams({
+      width: String(width),
+      height: String(height),
+      seed: String(seed),
+      model,
+      nologo: 'true'
+    });
+    return `https://image.pollinations.ai/prompt/${encoded}?${params.toString()}`;
+  }
+
+  function setResultLoading() {
+    resultEl.innerHTML = '<div class="spinner"></div><p class="placeholder">Bild wird generiert…</p>';
+  }
+
+  function setResultError(message) {
+    resultEl.innerHTML = `<p class="error">${message}</p>`;
+  }
+
+  function setResultImage(url, prompt) {
+    resultEl.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = prompt;
+    resultEl.appendChild(img);
+
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+
+    const downloadLink = document.createElement('a');
+    downloadLink.href = url;
+    downloadLink.download = 'bild.jpg';
+    downloadLink.target = '_blank';
+    downloadLink.rel = 'noopener';
+    downloadLink.className = 'download-link';
+    const downloadBtn = document.createElement('button');
+    downloadBtn.className = 'secondary';
+    downloadBtn.textContent = 'Herunterladen';
+    downloadLink.appendChild(downloadBtn);
+
+    const regenBtn = document.createElement('button');
+    regenBtn.className = 'secondary';
+    regenBtn.textContent = 'Neu generieren';
+    regenBtn.addEventListener('click', () => generate(prompt, true));
+
+    actions.appendChild(downloadLink);
+    actions.appendChild(regenBtn);
+    resultEl.appendChild(actions);
+  }
+
+  function addToHistory(url, prompt) {
+    history.unshift({ url, prompt });
+    if (history.length > 8) history.pop();
+    historyCard.style.display = 'block';
+    historyEl.innerHTML = '';
+    history.forEach(item => {
+      const img = document.createElement('img');
+      img.src = item.url;
+      img.alt = item.prompt;
+      img.title = item.prompt;
+      img.addEventListener('click', () => setResultImage(item.url, item.prompt));
+      historyEl.appendChild(img);
+    });
+  }
+
+  function generate(promptOverride, forceNewSeed) {
+    const prompt = (promptOverride ?? promptEl.value).trim();
+    if (!prompt) {
+      promptEl.focus();
+      return;
+    }
+    generateBtn.disabled = true;
+    setResultLoading();
+
+    const seed = Math.floor(Math.random() * 1_000_000_000);
+    const url = buildUrl(prompt, modelEl.value, seed);
+
+    const preload = new Image();
+    preload.onload = () => {
+      generateBtn.disabled = false;
+      setResultImage(url, prompt);
+      addToHistory(url, prompt);
+    };
+    preload.onerror = () => {
+      generateBtn.disabled = false;
+      setResultError('Bild konnte nicht geladen werden. Bitte nochmal versuchen.');
+    };
+    preload.src = url;
+  }
+
+  generateBtn.addEventListener('click', () => generate());
+  promptEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      generate();
+    }
+  });
+</script>
+</body>
+</html>
