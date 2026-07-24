@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SAAMai</title>
+  <meta name="description" content="SAAMai - deine private, lokale KI. Vollstaendig offline, kostenlos und Open-Source." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app" class="app">
+
+    <!-- Sidebar: chat list, search, new chat -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <span class="brand-logo">🤖</span>
+          <span class="brand-name">SAAMai</span>
+        </div>
+        <button id="newChatBtn" class="btn btn-primary" data-i18n="sidebar.newChat">+ Neuer Chat</button>
+      </div>
+
+      <div class="sidebar-search">
+        <input id="searchInput" type="search" data-i18n-placeholder="sidebar.search" placeholder="Chats durchsuchen..." />
+      </div>
+
+      <nav id="chatList" class="chat-list" aria-label="Chatverlauf"></nav>
+
+      <div class="sidebar-footer">
+        <button id="settingsBtn" class="btn btn-ghost" data-i18n="sidebar.settings">⚙ Einstellungen</button>
+        <button id="themeToggleBtn" class="btn btn-ghost icon-btn" title="Design wechseln">🌙</button>
+      </div>
+    </aside>
+
+    <button id="sidebarToggle" class="sidebar-toggle" aria-label="Sidebar umschalten">☰</button>
+
+    <!-- Main chat panel -->
+    <main class="main">
+      <header class="main-header">
+        <h1 id="chatTitle" class="chat-title">SAAMai</h1>
+        <div class="header-actions">
+          <select id="modelSelect" class="model-select" title="Modell"></select>
+          <button id="pinBtn" class="btn btn-ghost icon-btn" title="Anheften">📌</button>
+          <button id="exportBtn" class="btn btn-ghost icon-btn" title="Exportieren">⬇</button>
+          <button id="deleteChatBtn" class="btn btn-ghost icon-btn" title="Loeschen">🗑</button>
+        </div>
+      </header>
+
+      <section id="messages" class="messages">
+        <div id="emptyState" class="empty-state">
+          <div class="empty-state-icon">🤖</div>
+          <h2 data-i18n="chat.empty.title">Willkommen bei SAAMai</h2>
+          <p data-i18n="chat.empty.subtitle">Stelle eine Frage, lade ein Dokument hoch oder analysiere ein Bild - alles läuft lokal auf deinem Rechner.</p>
+        </div>
+      </section>
+
+      <form id="composer" class="composer">
+        <div id="attachmentPreview" class="attachment-preview"></div>
+        <div class="composer-row">
+          <input id="fileInput" type="file" hidden multiple accept=".pdf,.docx,.txt,.md,.csv,.json,.png,.jpg,.jpeg,.gif,.webp" />
+          <button type="button" id="attachBtn" class="btn btn-ghost icon-btn" data-i18n-title="chat.attach" title="Datei anhaengen">📎</button>
+          <button type="button" id="micBtn" class="btn btn-ghost icon-btn" data-i18n-title="chat.voiceStart" title="Spracheingabe starten">🎤</button>
+          <textarea id="messageInput" rows="1" data-i18n-placeholder="chat.placeholder" placeholder="Nachricht an SAAMai schreiben..."></textarea>
+          <button type="submit" id="sendBtn" class="btn btn-primary icon-btn" data-i18n-title="chat.send" title="Senden">➤</button>
+        </div>
+      </form>
+    </main>
+  </div>
+
+  <!-- Settings modal -->
+  <dialog id="settingsModal" class="modal">
+    <form method="dialog" class="modal-content">
+      <div class="modal-header">
+        <h2 data-i18n="settings.title">Einstellungen</h2>
+        <button type="submit" class="btn btn-ghost icon-btn" data-i18n-title="settings.close" title="Schliessen">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <section class="settings-section">
+          <label for="languageSelect" data-i18n="settings.language">Sprache</label>
+          <select id="languageSelect">
+            <option value="de">Deutsch</option>
+            <option value="en">English</option>
+          </select>
+        </section>
+
+        <section class="settings-section">
+          <label data-i18n="settings.theme">Design</label>
+          <div class="segmented">
+            <button type="button" data-theme="dark" class="segmented-btn" data-i18n="settings.theme.dark">Dunkel</button>
+            <button type="button" data-theme="light" class="segmented-btn" data-i18n="settings.theme.light">Hell</button>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <label data-i18n="settings.models.title">Lokale Modelle</label>
+          <ul id="modelList" class="model-list"></ul>
+          <div class="model-pull-row">
+            <input id="pullModelName" type="text" data-i18n-placeholder="settings.models.namePlaceholder" placeholder="z. B. llama3.1" />
+            <button type="button" id="pullModelBtn" class="btn btn-secondary" data-i18n="settings.models.pull">Herunterladen</button>
+          </div>
+          <div id="pullProgress" class="pull-progress"></div>
+        </section>
+
+        <section class="settings-section">
+          <label data-i18n="settings.plugins.title">Plugins</label>
+          <ul id="pluginList" class="plugin-list"></ul>
+        </section>
+
+        <section class="settings-section">
+          <label data-i18n="settings.account.title">Konto</label>
+          <div id="accountLoggedOut" class="account-form">
+            <input id="authUsername" type="text" data-i18n-placeholder="settings.account.username" placeholder="Benutzername" />
+            <input id="authPassword" type="password" data-i18n-placeholder="settings.account.password" placeholder="Passwort" />
+            <div class="account-buttons">
+              <button type="button" id="loginBtn" class="btn btn-secondary" data-i18n="settings.account.login">Anmelden</button>
+              <button type="button" id="registerBtn" class="btn btn-secondary" data-i18n="settings.account.register">Registrieren</button>
+            </div>
+          </div>
+          <div id="accountLoggedIn" class="account-status" hidden>
+            <span data-i18n="settings.account.loggedInAs">Angemeldet als</span> <strong id="accountUsername"></strong>
+            <button type="button" id="logoutBtn" class="btn btn-secondary" data-i18n="settings.account.logout">Abmelden</button>
+          </div>
+        </section>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/voice.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/chat.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
