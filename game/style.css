@@ -1,0 +1,374 @@
+/* ==========================================================================
+   SKYDRIFT – Stylesheet
+   Dunkles Arcade-Theme, responsive Letterbox-Layout rund um das Canvas.
+   ========================================================================== */
+
+:root {
+  --bg-deep: #05070d;
+  --bg-panel: #10151f;
+  --bg-panel-alt: #161d2b;
+  --border: #29344a;
+  --text: #eef2ff;
+  --text-dim: #8b93ab;
+  --accent: #4fd6ff;
+  --accent-2: #a855f7;
+  --danger: #ff5470;
+  --success: #34e0a1;
+  --radius: 18px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-deep);
+  color: var(--text);
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#app {
+  width: 100vw;
+  height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 0%, rgba(79, 214, 255, 0.08), transparent 60%),
+    var(--bg-deep);
+}
+
+/* Wrapper wird per JS exakt auf die sichtbare Canvas-Groesse gesetzt,
+   damit alle Overlays (Menue, Pause, Game Over) passgenau ausgerichtet sind. */
+#game-wrapper {
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+  touch-action: none;
+}
+
+#game-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+/* ---------------- HUD ---------------- */
+
+#hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(10px, env(safe-area-inset-top)) 14px 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+#hud.hidden {
+  display: none;
+}
+
+#score-display {
+  font-size: clamp(1.6rem, 6vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6), 0 0 18px rgba(79, 214, 255, 0.35);
+  min-width: 1ch;
+}
+
+.icon-btn {
+  pointer-events: all;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: rgba(16, 21, 31, 0.75);
+  color: var(--text);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.icon-btn:active {
+  transform: scale(0.92);
+}
+
+/* ---------------- Screens (Menu / Pause / Game Over) ---------------- */
+
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  background: linear-gradient(180deg, rgba(5, 7, 13, 0.72), rgba(5, 7, 13, 0.88));
+  backdrop-filter: blur(2px);
+  z-index: 10;
+  animation: fadeIn 0.25s ease-out;
+  overflow-y: auto;
+}
+
+.screen.hidden {
+  display: none;
+}
+
+.screen-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  max-width: 92%;
+}
+
+.game-title {
+  margin: 0;
+  font-size: clamp(2.2rem, 10vw, 3.4rem);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 4px 20px rgba(79, 214, 255, 0.25));
+}
+
+.tagline {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: clamp(0.85rem, 3vw, 1rem);
+}
+
+#screen-pause h2,
+#screen-gameover h2 {
+  margin: 0;
+  font-size: clamp(1.6rem, 7vw, 2.2rem);
+  letter-spacing: 0.03em;
+}
+
+.stats-box {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 74px;
+  padding: 4px 8px;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.btn {
+  min-width: 200px;
+  min-height: 50px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 20px;
+  letter-spacing: 0.02em;
+  transition: transform 0.1s ease;
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #06090f;
+  border: none;
+}
+
+.btn-secondary {
+  background: var(--bg-panel-alt);
+  color: var(--text);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-dim);
+}
+
+.controls-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.mute-btn {
+  position: absolute;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  right: 16px;
+}
+
+#new-highscore-badge {
+  background: linear-gradient(135deg, var(--success), var(--accent));
+  color: #06090f;
+  font-weight: 800;
+  padding: 8px 16px;
+  border-radius: 999px;
+  animation: pulseBadge 0.9s ease-in-out infinite;
+}
+
+#new-highscore-badge.hidden {
+  display: none;
+}
+
+@keyframes pulseBadge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ---------------- Debug Overlay ---------------- */
+
+#debug-panel {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(79, 214, 255, 0.4);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #9dfcff;
+  white-space: pre;
+  pointer-events: none;
+}
+
+#debug-panel.hidden {
+  display: none;
+}
+
+/* ---------------- Dev / Cheat Panel ---------------- */
+
+#dev-panel {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  right: 8px;
+  z-index: 25;
+  background: rgba(20, 4, 30, 0.85);
+  border: 1px solid var(--accent-2);
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 12px;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 40%;
+  overflow-y: auto;
+}
+
+#dev-panel.hidden {
+  display: none;
+}
+
+#dev-panel h3 {
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: var(--accent-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+#dev-panel label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: space-between;
+}
+
+#dev-panel button {
+  background: var(--bg-panel-alt);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+/* ---------------- Screenshake ---------------- */
+
+.shake {
+  animation: shakeAnim 0.4s ease;
+}
+
+@keyframes shakeAnim {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-6px, 4px); }
+  40% { transform: translate(6px, -4px); }
+  60% { transform: translate(-4px, -3px); }
+  80% { transform: translate(4px, 3px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* ---------------- Responsive tweaks ---------------- */
+
+@media (max-width: 420px) {
+  .btn {
+    min-width: 72vw;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 480px) {
+  .game-title {
+    font-size: clamp(1.6rem, 8vh, 2.4rem);
+  }
+  .screen-inner {
+    gap: 8px;
+  }
+  .stats-box {
+    padding: 8px 12px;
+  }
+}

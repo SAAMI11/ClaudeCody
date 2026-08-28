@@ -1,0 +1,5 @@
+Alle Soundeffekte dieses Spiels werden zur Laufzeit direkt mit der Web Audio API
+synthetisiert (siehe AudioManager in game.js). Es werden bewusst keine externen
+Audiodateien verwendet, damit das Spiel ohne zusätzliche Downloads lokal im
+Browser läuft. Dieser Ordner bleibt Teil der vorgegebenen Projektstruktur und
+dient als Erweiterungspunkt für optionale eigene Sound-Assets.

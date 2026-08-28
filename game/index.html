@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>SKYDRIFT – Arcade Flugspiel</title>
+<meta name="description" content="SKYDRIFT: Ein eigenständiges 2D-Arcade-Geschicklichkeitsspiel im Browser. Weiche Hindernissen aus und sammle Punkte." />
+<meta name="theme-color" content="#0a0e17" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div id="app">
+  <div id="game-wrapper">
+    <canvas id="game-canvas" aria-label="SKYDRIFT Spielfläche"></canvas>
+
+    <!-- HUD: waehrend PLAYING/PAUSED sichtbar -->
+    <div id="hud" class="hidden" aria-live="polite">
+      <div id="score-display">0</div>
+      <button id="pause-btn" class="icon-btn" type="button" aria-label="Pause">❚❚</button>
+    </div>
+
+    <!-- MENU State -->
+    <section id="screen-menu" class="screen">
+      <div class="screen-inner">
+        <h1 class="game-title">SKYDRIFT</h1>
+        <p class="tagline">Gleite durch die Kristallschluchten des Himmels</p>
+
+        <div class="stats-box">
+          <div class="stat">
+            <span class="stat-label">Highscore</span>
+            <span class="stat-value" id="menu-highscore">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Runden</span>
+            <span class="stat-value" id="menu-rounds">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Beste Zeit</span>
+            <span class="stat-value" id="menu-besttime">0.0s</span>
+          </div>
+        </div>
+
+        <button id="start-btn" class="btn btn-primary" type="button">Start</button>
+
+        <p class="controls-hint">
+          Steuerung: <strong>Leertaste</strong> · <strong>Pfeil ↑</strong> · <strong>Klick</strong> · <strong>Tippen</strong>
+        </p>
+      </div>
+
+      <button id="mute-btn-menu" class="icon-btn mute-btn" type="button" aria-label="Ton umschalten">🔊</button>
+    </section>
+
+    <!-- PAUSED State -->
+    <section id="screen-pause" class="screen hidden">
+      <div class="screen-inner">
+        <h2>Pausiert</h2>
+        <button id="resume-btn" class="btn btn-primary" type="button">Fortsetzen</button>
+        <button id="restart-btn-pause" class="btn btn-secondary" type="button">Neustart</button>
+        <button id="menu-btn-pause" class="btn btn-ghost" type="button">Zurück zum Menü</button>
+      </div>
+    </section>
+
+    <!-- GAME_OVER State -->
+    <section id="screen-gameover" class="screen hidden">
+      <div class="screen-inner">
+        <h2>Game Over</h2>
+        <div id="new-highscore-badge" class="hidden">🏆 Neuer Highscore!</div>
+        <div class="stats-box">
+          <div class="stat">
+            <span class="stat-label">Score</span>
+            <span class="stat-value" id="gameover-score">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Highscore</span>
+            <span class="stat-value" id="gameover-highscore">0</span>
+          </div>
+        </div>
+        <button id="restart-btn-gameover" class="btn btn-primary" type="button">Neustart</button>
+        <button id="menu-btn-gameover" class="btn btn-ghost" type="button">Zurück zum Menü</button>
+      </div>
+    </section>
+
+    <!-- Debug Overlay (Taste D) -->
+    <div id="debug-panel" class="hidden"></div>
+
+    <!-- Dev/Cheat Panel (nur mit ?dev=1 in der URL) -->
+    <div id="dev-panel" class="hidden"></div>
+  </div>
+</div>
+
+<script src="game.js" defer></script>
+</body>
+</html>

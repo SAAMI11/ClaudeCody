@@ -1,0 +1,5 @@
+Alle Grafiken dieses Spiels werden zur Laufzeit direkt mit der Canvas API gezeichnet.
+Es werden bewusst keine externen Bilddateien verwendet, damit das Spiel ohne
+zusätzliche Downloads lokal im Browser läuft. Dieser Ordner bleibt Teil der
+vorgegebenen Projektstruktur und dient als Erweiterungspunkt für optionale
+eigene Grafik-Assets.
