@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Blinker-Chat</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 540px; height: 960px; overflow: hidden; }
+  body {
+    font-family: "Segoe UI", "Helvetica Neue", Roboto, "Noto Sans", Arial, sans-serif;
+    background: #efeae2;
+    display: flex; flex-direction: column;
+    color: #111b21;
+  }
+
+  /* Header */
+  .header {
+    height: 86px; background: #f0f2f5;
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 18px 0 10px;
+    border-bottom: 1px solid #d1d7db;
+    position: relative; z-index: 2;
+  }
+  .back { width: 26px; height: 26px; }
+  .avatar {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: #cfd4d6; overflow: hidden; flex: none;
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+  .who { flex: 1; min-width: 0; }
+  .name { font-size: 22px; font-weight: 700; line-height: 1.2; }
+  .status { font-size: 15px; color: #667781; margin-top: 2px; }
+  .icons { display: flex; gap: 26px; align-items: center; }
+  .icons svg { width: 28px; height: 28px; }
+
+  /* Chat area */
+  .chat {
+    flex: 1; position: relative; overflow: hidden;
+    padding: 22px 16px;
+    display: flex; flex-direction: column; gap: 14px;
+    background-color: #efeae2;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23d9d2c5' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='18' cy='20' r='7'/%3E%3Cpath d='M15 19h.01M21 19h.01M15 23q3 2.5 6 0'/%3E%3Cpath d='M70 12l4 8 9 1-6.5 6 1.7 9-8.2-4.5-8.2 4.5 1.7-9-6.5-6 9-1z'/%3E%3Cpath d='M100 60c0-4 6-4 6 0 0-4 6-4 6 0 0 5-6 8-6 10 0-2-6-5-6-10z'/%3E%3Crect x='12' y='66' width='20' height='14' rx='3'/%3E%3Cpath d='M12 70l10 6 10-6'/%3E%3Cpath d='M58 88a10 10 0 1 0 14 0M65 80v10'/%3E%3Cpath d='M40 42q6-8 12 0t12 0'/%3E%3Cpath d='M92 100l8-8m-8 0l8 8'/%3E%3Ccircle cx='22' cy='108' r='3'/%3E%3C/g%3E%3C/svg%3E");
+  }
+  .date {
+    align-self: center; background: #ffffff; color: #54656f;
+    font-size: 15px; padding: 6px 14px; border-radius: 8px;
+    box-shadow: 0 1px 0.5px rgba(11,20,26,.13);
+    margin-bottom: 6px;
+  }
+  .bubble {
+    max-width: 82%; position: relative;
+    padding: 10px 14px 8px 14px;
+    border-radius: 12px;
+    font-size: 25px; line-height: 1.35;
+    box-shadow: 0 1px 0.5px rgba(11,20,26,.13);
+  }
+  .bubble .meta {
+    float: right; margin: 12px 0 -4px 12px;
+    font-size: 14px; color: #667781;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .out { align-self: flex-end; background: #d9fdd3; border-top-right-radius: 0; }
+  .in  { align-self: flex-start; background: #ffffff; border-top-left-radius: 0; }
+  .out::after, .in::after {
+    content: ""; position: absolute; top: 0; width: 12px; height: 14px;
+  }
+  .out::after { right: -10px; background: #d9fdd3; clip-path: polygon(0 0, 100% 0, 0 100%); }
+  .in::after  { left: -10px;  background: #ffffff; clip-path: polygon(0 0, 100% 0, 100% 100%); }
+  .ticks { width: 20px; height: 13px; }
+
+  /* Input bar */
+  .bar {
+    height: 78px; background: #f0f2f5;
+    display: flex; align-items: center; gap: 14px;
+    padding: 0 14px;
+  }
+  .bar svg { width: 30px; height: 30px; flex: none; }
+  .input {
+    flex: 1; height: 50px; background: #fff; border-radius: 25px;
+    display: flex; align-items: center; padding: 0 20px;
+    font-size: 20px; color: #8696a0;
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <svg class="back" viewBox="0 0 24 24" fill="none" stroke="#54656f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+    <div class="avatar">
+      <svg width="52" height="52" viewBox="0 0 52 52"><circle cx="26" cy="20" r="10" fill="#fff"/><path d="M6 52c0-12 9-19 20-19s20 7 20 19z" fill="#fff"/></svg>
+    </div>
+    <div class="who">
+      <div class="name">Schatz ❤️</div>
+      <div class="status">zuletzt online heute</div>
+    </div>
+    <div class="icons">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#54656f" stroke-width="1.9" stroke-linejoin="round"><rect x="2" y="6" width="13" height="12" rx="2.5"/><path d="M15 10.5l6-3.5v10l-6-3.5z"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="#54656f" stroke-width="1.9" stroke-linejoin="round"><path d="M6.6 3.5l2.6.4 1.3 4-2 1.6a12 12 0 0 0 6 6l1.6-2 4 1.3.4 2.6c0 1.2-1 2.1-2.2 2.1A17 17 0 0 1 4.5 5.7C4.5 4.5 5.4 3.5 6.6 3.5z"/></svg>
+    </div>
+  </div>
+
+  <div class="chat">
+    <div class="date">Heute</div>
+
+    <div class="bubble out">
+      Schatz, funktioniert der Blinker noch?
+      <span class="meta">17:24
+        <svg class="ticks" viewBox="0 0 20 13" fill="none" stroke="#53bdeb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 7l3.5 3.5L11 2"/><path d="M7.5 10.5L8.5 11.5 16 2"/></svg>
+      </span>
+    </div>
+
+    <div class="bubble in">
+      Warte... ja... nein... ja... nein... ja... nein... ja... nein...
+      <span class="meta">17:25</span>
+    </div>
+  </div>
+
+  <div class="bar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#54656f" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="#54656f" stroke-width="1.9" stroke-linejoin="round"><path d="M3 8.5A2 2 0 0 1 5 6.5h2.5L9 4.5h6l1.5 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.8"/></svg>
+    <div class="input">Nachricht</div>
+    <svg viewBox="0 0 24 24" fill="none" stroke="#54656f" stroke-width="1.9" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>
+  </div>
+</body>
+</html>
